@@ -20,6 +20,7 @@ inputs:
     - key: withGoreleaser
       description: Release with goreleaser
       required: false
+      default: "no"
       options:
         - "yes"
         - "no"
