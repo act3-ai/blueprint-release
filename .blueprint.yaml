@@ -21,8 +21,8 @@ inputs:
       description: Release with goreleaser
       required: false
       options:
-        - "true"
-        - "false"
+        - "yes"
+        - "no"
       priority: 1
     - key: executableName
       description: Name of the Go CLI's executable
@@ -37,7 +37,7 @@ ignore:
   - path: ".golangci.yaml"
     if: "{{ne .inputs.ProjectType Go}}"
   - path: ".goreleaser.yaml"
-    if: "{{and (ne .inputs.ProjectType Go) (ne .inputs.withGoreleaser true)}}"
+    if: "{{and (ne .inputs.ProjectType Go) (ne .inputs.withGoreleaser yes)}}"
 
 # Configure templating in this Blueprint
 templating: {}
