@@ -16,13 +16,16 @@ inputs:
       default: |-
           {{with .meta.repository}}{{ . | trimPrefix "https://" | trimSuffix ".git" }}{{end}}
       priority: 1
-    - key: withGoreleaser
+    - key: goreleaser
       description: Release with goreleaser
       default: "no"
       options:
         - "no"
         - "yes"
       priority: 1
+    - key: host
+      description: "Release target host: gitlab.com, github.com, or a private gitlab host."
+      required: true
     - key: executableName
       description: Name of the Go CLI's executable
       default: "{{.meta.name}}"
@@ -33,9 +36,9 @@ inputs:
 # Non-empty conditions result in the path being excluded
 ignore:
   - path: ".golangci.yaml"
-    if: "{{ne .inputs.ProjectType Go}}"
+    if: '{{ne .inputs.ProjectType Go}}'
   - path: ".goreleaser.yaml"
-    if: '{{and (ne .inputs.ProjectType Go) (ne .inputs.withGoreleaser "yes")}}'
+    if: '{{and (ne .inputs.ProjectType Go) (ne .inputs.goreleaser "yes")}}'
 
 # Configure templating in this Blueprint
 templating: {}
