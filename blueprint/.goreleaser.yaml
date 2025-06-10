@@ -26,7 +26,7 @@ archives:
     formats: ["tar.gz"]
     builds_info:
       mode: 755
-    name_template: '{{.inputs.executableName}}"-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"'
+    name_template: '{{.inputs.executableName}}{{`-v{{ .Version }}-{{ .Os }}-{{ .Arch }}`}}'
     files:
       - LICENSE
       - src: releases/v{{ .Version }}.md
@@ -43,7 +43,7 @@ release:
   skip_upload: false
 
 checksum:
-  name_template: "ace-dt-v{{ .Version }}-checksums.txt"
+  name_template: '{{`ace-dt-v{{ .Version }}-checksums.txt`}}'
   algorithm: sha256
   ids:
     - '{{.inputs.executableName}}-archives'
