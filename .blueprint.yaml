@@ -1,0 +1,28 @@
+# Blueprint configuration file for ACT3 Project Tool
+kind: Blueprint
+apiVersion: project.act3-ace.io/v1beta1
+
+# List of additional inputs for use in this Blueprint
+inputs:
+    - key: projectType
+      description: "Type of Project"
+      default: '{{.meta.name | kebabcase}}'
+      required: true
+      options:
+        - Go
+        - Python
+
+# List of conditions to exclude paths when rendering this Blueprint
+# Non-empty conditions result in the path being excluded
+ignore: []
+
+# Configure templating in this Blueprint
+templating: {}
+
+# Configure project linting with this Blueprint
+lint: {}
+
+# Edit configuration:        act3-pt bputil edit
+# Test Blueprint rendering:  act3-pt bputil test
+# View templating reference: act3-pt bputil reference
+
