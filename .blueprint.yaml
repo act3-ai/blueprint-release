@@ -11,6 +11,9 @@ inputs:
       options:
         - Go
         - Python
+    - key: host
+      description: "Release target host: gitlab.com, github.com, or a private gitlab host."
+      required: true
     - key: modulePath
       description: Go module path for the project
       default: |-
@@ -23,9 +26,6 @@ inputs:
         - "no"
         - "yes"
       priority: 1
-    - key: host
-      description: "Release target host: gitlab.com, github.com, or a private gitlab host."
-      required: true
     - key: executableName
       description: Name of the Go CLI's executable
       default: "{{.meta.name}}"

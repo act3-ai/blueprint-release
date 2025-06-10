@@ -1,8 +1,8 @@
 version: 2
 
 builds:
-  - id: {{.inputs.executableName}}
-    binary: {{.inputs.executableName}}
+  - id: '{{.inputs.executableName}}'
+    binary: '{{.inputs.executableName}}'
     goos:
       - linux
       - darwin
@@ -20,13 +20,13 @@ builds:
     main: ./cmd/{{.inputs.executableName}}/
 
 archives:
-  - id: {{.inputs.executableName}}-archives
+  - id: '{{.inputs.executableName}}-archives'
     ids:
-      - {{.inputs.executableName}}
+      - '{{.inputs.executableName}}'
     formats: ["tar.gz"]
     builds_info:
       mode: 755
-    name_template: `"`{{.inputs.executableName}}`"-v{{ .Version }}-{{ .Os }}-{{ .Arch }}`
+    name_template: '{{.inputs.executableName}}"-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"'
     files:
       - LICENSE
       - src: releases/v{{ .Version }}.md
@@ -37,7 +37,7 @@ release:
     owner: act3-ai
     name: data-tool
   ids:
-    - {{.inputs.executableName}}-archives
+    - '{{.inputs.executableName}}-archives'
   make_latest: envOrDefault "RELEASE_LATEST" "true"
   mode: replace # if we need to re-release, don't duplicate the release notes
   skip_upload: false
@@ -46,5 +46,5 @@ checksum:
   name_template: "ace-dt-v{{ .Version }}-checksums.txt"
   algorithm: sha256
   ids:
-    - {{.inputs.executableName}}-archives
+    - '{{.inputs.executableName}}-archives'
   disable: false
