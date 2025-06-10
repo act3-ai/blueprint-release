@@ -11,10 +11,29 @@ inputs:
       options:
         - Go
         - Python
+    - key: modulePath
+      description: Go module path for the project
+      default: |-
+          {{with .meta.repository}}{{ . | trimPrefix "https://" | trimSuffix ".git" }}{{end}}
+      required: false
+      priority: 1
+    - key: withGoreleaser
+      description: Release with goreleaser
+      required: false
+    - key: executableName
+      description: Name of the Go CLI's executable
+      default: "{{.meta.name}}"
+      required: true
+      priority: 1
+
 
 # List of conditions to exclude paths when rendering this Blueprint
 # Non-empty conditions result in the path being excluded
-ignore: []
+ignore:
+  - path: ".golangci.yaml"
+    if: "{{ne .inputs.ProjectType Go}}"
+  - path: ".goreleaser.yaml"
+    if: "{{and (ne .inputs.ProjectType Go) (not .inputs.withGoreleaser)}}"
 
 # Configure templating in this Blueprint
 templating: {}
