@@ -36,9 +36,9 @@ inputs:
 # Non-empty conditions result in the path being excluded
 ignore:
   - path: ".golangci.yaml"
-    if: '{{ne .inputs.ProjectType Go}}'
+    if: '{{ne .inputs.projectType Go}}'
   - path: ".goreleaser.yaml"
-    if: '{{and (ne .inputs.ProjectType Go) (ne .inputs.goreleaser "yes")}}'
+    if: '{{and (ne .inputs.projectType Go) (ne .inputs.goreleaser "yes")}}'
 
 # Configure templating in this Blueprint
 templating: {}
