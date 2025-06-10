@@ -15,20 +15,17 @@ inputs:
       description: Go module path for the project
       default: |-
           {{with .meta.repository}}{{ . | trimPrefix "https://" | trimSuffix ".git" }}{{end}}
-      required: false
       priority: 1
     - key: withGoreleaser
       description: Release with goreleaser
-      required: false
       default: "no"
       options:
-        - "yes"
         - "no"
+        - "yes"
       priority: 1
     - key: executableName
       description: Name of the Go CLI's executable
       default: "{{.meta.name}}"
-      required: false
       priority: 1
 
 
