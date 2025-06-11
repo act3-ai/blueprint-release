@@ -14,6 +14,8 @@ inputs:
     - key: host
       description: "Release target host: gitlab.com, github.com, or a private gitlab host."
       required: true
+      default: |-
+          {{with .meta.repository}}{{ . | trimPrefix "https://" | trimSuffix ".git" }}{{end}}
     - key: modulePath
       description: Go module path for the project
       default: |-
@@ -38,7 +40,7 @@ ignore:
   - path: ".golangci.yaml"
     if: '{{ne .inputs.projectType Go}}'
   - path: ".goreleaser.yaml"
-    if: '{{and (ne .inputs.projectType Go) (ne .inputs.goreleaser "yes")}}'
+    if: '{{(and (ne .inputs.projectType Go) (ne .inputs.goreleaser "yes"))}}'
 
 # Configure templating in this Blueprint
 templating: {}
