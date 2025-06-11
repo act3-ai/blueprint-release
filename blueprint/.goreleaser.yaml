@@ -1,8 +1,14 @@
 version: 2
 
+{{if (and (ne .inputs.host "github.com") (ne .inputs.host "gitlab.com")) -}}
+gitlab_urls:
+  api: https://{{.inputs.host}}/api/v4
+  download: https://{{.inputs.host}}
+{{end}}
+
 builds:
-  - id: '{{.inputs.executableName}}'
-    binary: '{{.inputs.executableName}}'
+  - id: {{.inputs.executableName}}
+    binary: {{.inputs.executableName}}
     goos:
       - linux
       - darwin
@@ -13,38 +19,49 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w -X main.build={{.Version}}
+      - {{"-s -w -X main.build={{.Version}}"}}
     env:
       - CGO_ENABLED=0
       - GOFIPS140=latest
+      {{if (and (ne .inputs.host "github.com") (ne .inputs.host "gitlab.com")) -}}
+      - GOPRIVATE={{.inputs.host}}
+      {{end -}}
     main: ./cmd/{{.inputs.executableName}}/
 
 archives:
-  - id: '{{.inputs.executableName}}-archives'
+  - id: {{.inputs.executableName}}-archives
     ids:
-      - '{{.inputs.executableName}}'
+      - {{.inputs.executableName}}
     formats: ["tar.gz"]
     builds_info:
       mode: 755
-    name_template: '{{.inputs.executableName}}{{`-v{{ .Version }}-{{ .Os }}-{{ .Arch }}`}}'
+    name_template: "{{.inputs.executableName}}{{"-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"}}"
     files:
       - LICENSE
-      - src: releases/v{{ .Version }}.md
+      - src: "{{"releases/v{{ .Version }}.md"}}"
         strip_parent: true
 
 release:
+  {{ $repoinfo := ( .meta.repository | trimPrefix "https://" | trimSuffix ".git" | splitn "/" 3 ) -}}
+  {{if (eq .inputs.host "github.com") -}}
   github:
-    owner: act3-ai
-    name: data-tool
+    owner: {{$repoinfo._1}}
+    name: {{$repoinfo._2}}
+  {{else -}}
+  gitlab:
+    owner: {{$repoinfo._0}}
+    name: {{$repoinfo._1}}/{{$repoinfo._2}}
+  {{end -}}
+    
   ids:
-    - '{{.inputs.executableName}}-archives'
-  make_latest: envOrDefault "RELEASE_LATEST" "true"
-  mode: replace # if we need to re-release, don't duplicate the release notes
+    - {{.inputs.executableName}}-archives
+  make_latest: envOrDefault "RELEASE_LATEST" "false" # don't add 'latest' tag by default
+  mode: replace # if there's a need to re-release, don't duplicate the release notes
   skip_upload: false
 
 checksum:
-  name_template: '{{`ace-dt-v{{ .Version }}-checksums.txt`}}'
+  name_template: {{.inputs.executableName}}{{"-v{{ .Version }}-checksums.txt"}}
   algorithm: sha256
   ids:
-    - '{{.inputs.executableName}}-archives'
+    - {{.inputs.executableName}}-archives
   disable: false

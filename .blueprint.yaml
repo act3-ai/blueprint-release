@@ -4,43 +4,37 @@ apiVersion: project.act3-ace.io/v1beta1
 
 # List of additional inputs for use in this Blueprint
 inputs:
+    # general repository information
+    - key: host
+      description: "Release target host: github.com, gitlab.com, or a private gitlab host"
+      required: true
+      default: |-
+          {{with .meta.repository}}{{ ( . | trimPrefix "https://" | trimSuffix ".git" | splitn "/" 2 )._0 }}{{end}}
     - key: projectType
       description: "Type of Project"
-      default: '{{.meta.name | kebabcase}}'
       required: true
+      default: Go
       options:
         - Go
         - Python
-    - key: host
-      description: "Release target host: gitlab.com, github.com, or a private gitlab host."
-      required: true
-      default: |-
-          {{with .meta.repository}}{{ . | trimPrefix "https://" | trimSuffix ".git" }}{{end}}
-    - key: modulePath
-      description: Go module path for the project
-      default: |-
-          {{with .meta.repository}}{{ . | trimPrefix "https://" | trimSuffix ".git" }}{{end}}
-      priority: 1
+    # goreleaser supports both go and python, but python is in alpha
     - key: goreleaser
-      description: Release with goreleaser
+      description: "Release with goreleaser (go only at this time)"
       default: "no"
       options:
         - "no"
         - "yes"
       priority: 1
+    # go specific config
     - key: executableName
-      description: Name of the Go CLI's executable
-      default: "{{.meta.name}}"
+      description: "Name of the Go CLI's executable"
       priority: 1
-
 
 # List of conditions to exclude paths when rendering this Blueprint
 # Non-empty conditions result in the path being excluded
 ignore:
-  - path: ".golangci.yaml"
-    if: '{{ne .inputs.projectType Go}}'
   - path: ".goreleaser.yaml"
-    if: '{{(and (ne .inputs.projectType Go) (ne .inputs.goreleaser "yes"))}}'
+    if: '{{(and (ne .inputs.projectType Go) (eq .inputs.goreleaser "no"))}}'
 
 # Configure templating in this Blueprint
 templating: {}
