@@ -18,13 +18,13 @@ inputs:
         - Go
         - Python
     # goreleaser supports both go and python, but python is in alpha
-    - key: goreleaser
+    - key: includeGoreleaser
       description: "Release with goreleaser (go only at this time)"
-      default: "no"
-      options:
-        - "no"
-        - "yes"
       priority: 1
+      default: "disabled"
+      options:
+        - "disabled"
+        - "enabled"
     # go specific config
     - key: executableName
       description: "Name of the Go CLI's executable"
@@ -33,8 +33,8 @@ inputs:
 # List of conditions to exclude paths when rendering this Blueprint
 # Non-empty conditions result in the path being excluded
 ignore:
-  - path: ".goreleaser.yaml"
-    if: '{{(and (ne .inputs.projectType Go) (eq .inputs.goreleaser "no"))}}'
+  - path: .goreleaser.yaml
+    if: '{{if (eq .inputs.includeGoreleaser "enabled")}}{{else}}disabled{{end}}'
 
 # Configure templating in this Blueprint
 templating: {}
