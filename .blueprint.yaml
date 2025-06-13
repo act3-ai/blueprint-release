@@ -29,6 +29,13 @@ inputs:
     - key: executableName
       description: "Name of the Go CLI's executable"
       priority: 1
+    - key: includeDockerPublish
+      description: "Publish container image using Dockerfile"
+      priority: 0
+      default: "disabled"
+      options:
+        - "disabled"
+        - "enabled"
 
 # List of conditions to exclude paths when rendering this Blueprint
 # Non-empty conditions result in the path being excluded
