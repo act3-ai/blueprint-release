@@ -34,7 +34,7 @@ inputs:
 # Non-empty conditions result in the path being excluded
 ignore:
   - path: .goreleaser.yaml
-    if: '{{if (eq .inputs.includeGoreleaser "enabled")}}{{else}}disabled{{end}}'
+    if: '{{if (and (eq .inputs.includeGoreleaser "enabled") (eq .inputs.projectType "Go"))}}{{else}}disabled{{end}}'
 
 # Configure templating in this Blueprint
 templating: {}
