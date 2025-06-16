@@ -172,7 +172,7 @@ approve() {
     notesPath="releases/$version.md"
 
     # stage release material
-    git add "$version_file" "$changelog_file" "$notesPath"
+    git add "VERSION" "CHANGELOG.md" "$notesPath"
     git add \*.md
     # signed commit
     git commit -S -m "chore(release): prepare for $version"
