@@ -36,6 +36,10 @@ inputs:
       options:
         - "disabled"
         - "enabled"
+    - key: helmChartDir
+      description: "Version and publish helm chart"
+      priority: 1
+      default: ""
 
 # List of conditions to exclude paths when rendering this Blueprint
 # Non-empty conditions result in the path being excluded

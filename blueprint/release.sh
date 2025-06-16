@@ -23,6 +23,9 @@ mod_python="github.com/act3-ai/dagger/python"
 {{- if (eq .inputs.includeDockerPublish "enabled") -}}
 mod_docker="github.com/act3-ai/dagger/docker"
 {{- end}}
+{{- if (ne .inputs.helmChartDir "") -}}
+mod_helm="github.com/sagikazarmark/daggerverse/helm@helm/v0.14.0"
+{{- end}}
 
 help() {
     cat <<EOF
@@ -174,6 +177,7 @@ approve() {
     # stage release material
     git add "VERSION" "CHANGELOG.md" "$notesPath"
     git add \*.md
+    {{if (ne .inputs.helmChartDir "")}}git add {{.inputs.helmChartDir}}/*{{end}}
     # signed commit
     git commit -S -m "chore(release): prepare for $version"
     # annotated and signed tag
@@ -196,6 +200,7 @@ publish() {
 
     {{ $repoinfo := ( .meta.repository | trimPrefix "https://" | trimSuffix ".git" | splitn "/" 3 ) -}}
 
+    {{/* Release with goreleaser, for GitHub or GitLab */}}
     {{- if (and (eq .inputs.includeGoreleaser "enabled") (eq .inputs.projectType "Go")) -}}
     {{- if (eq .inputs.host "github.com") -}}
     dagger -m="$mod_goreleaser" -s="$silent" --src="." call \
@@ -203,11 +208,12 @@ publish() {
     with-env-variable --name="RELEASE_LATEST" --value="$RELEASE_LATEST" \
     release
     {{- else -}}
-    dagger -m="$mod_goreleaser" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file"{{end}} call \
+    dagger -m="$mod_goreleaser" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call \
     with-secret-variable --name="GITLAB_API_TOKEN" --secret=env:GITLAB_API_TOKEN \
     with-env-variable --name="RELEASE_LATEST" --value="$RELEASE_LATEST" \
     release
     {{- end -}}
+    {{/* Basic releases with gh or glab CLIs */}}
     {{else if (eq .inputs.host "github.com") -}}
     dagger -m="$mod_release" -s="$silent" --src="." call create-github \
     --repo="{{$repoinfo._1}}/{{$repoinfo._2}}" \
@@ -216,7 +222,7 @@ publish() {
     --notes="releases/$version.md" \
     # --assets=file1,file2,...
     {{else}}
-    dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file"{{end}} call create-gitlab \
+    dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call create-gitlab \
     --host="{{$repoinfo._0}}" \
     --project="{{$repoinfo._1}}/{{$repoinfo._2}}" \
     --token=env:GITLAB_API_TOKEN \
@@ -226,11 +232,19 @@ publish() {
     {{- end}}
 
     {{- if (eq .inputs.projectType "Python") -}}
+    # publish python wheel
     # TODO: add OCI_REF, REG_USERNAME, and REG_PASSWORD
-    dagger -m="$mod_python" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file"{{end}} call python publish \
+    dagger -m="$mod_python" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call python publish \
     --publish-url="<OCI_REF>" \
     --username="<REG_USERNAME>" \
     --password=env:<REG_PASSWORD>
+    {{- end}}
+    {{if (ne .inputs.helmChartDir "") -}}
+    dagger -m="$mod_helm" -s="$silent" call \
+    with-registry-auth --address="<REGISTRY>" --username="<REG_USERNAME>" --secret=en:<REG_PASSWORD> \
+    chart --source={{.inputs.helmChartDir}} \
+    package \
+    publish --registry="oci://<REGISTRY>/<REPO>/charts"
     {{- end}}
 
     # publish image
