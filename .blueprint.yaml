@@ -25,9 +25,8 @@ inputs:
       options:
         - "disabled"
         - "enabled"
-    # go specific config
     - key: executableName
-      description: "Name of the Go CLI's executable"
+      description: "Name of the Go executable"
       priority: 1
     - key: includeDockerPublish
       description: "Publish container image using Dockerfile"
