@@ -7,8 +7,9 @@
 {{- $private = "true" -}}
 {{end -}}
 
-{{if (eq $private "true" ) }}
 # Custom Variables
+git_remote="{{.inputs.repository}}"
+{{if (eq $private "true" ) -}}
 netrc_file="~/.netrc"
 goprivate="{{.inputs.host}}"
 {{- end}}
@@ -57,6 +58,7 @@ Options:
         Skip git status checks, e.g. uncommitted changes. Only recommended for development.
 
 Required Environment Variables:
+    TODO: Add as desired
     {{if (eq .inputs.host "github.com") -}}
     - GITHUB_API_TOKEN     - repo:api access
     {{- else -}}
@@ -140,6 +142,15 @@ prompt_continue() {
     esac
 }
 
+# check_upstream ensures remote upstream matches local HEAD.
+check_upstream() {
+    git diff @{upstream} --stat --exit-code || {
+        echo "Local HEAD does not match upstream"
+        echo "Please review 'git diff @{upstream}' and match remote upstream or use --force"
+        exit 1
+    }
+}
+
 # prepare runs linters and unit tests, bumps the version, and generates the changelog.
 # runs 'approve' if interactive mode is enabled.
 prepare() {
@@ -155,8 +166,9 @@ prepare() {
     dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call {{lower .inputs.projectType}} check
 
     {{end -}}
-    # bump version, generate changelogs
     git fetch --tags
+    check_upstream
+    # bump version, generate changelogs
     dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call prepare export --path="."
 
     version=v$(cat "$version_file")
@@ -176,6 +188,9 @@ prepare() {
 # runs 'publish' if interactive mode is enabled.
 approve() {
     echo "Running approve stage..."
+
+    git fetch --tags
+    check_upstream
 
     version=v$(cat "$version_file")
     notesPath="releases/$version.md"
@@ -198,6 +213,9 @@ approve() {
 # publish pushes the release tag, uploads release assets, and publishes images.
 publish() {
     echo "Running publish stage..."
+
+    git fetch --tags
+    check_upstream
 
     # push this branch and the associated tags
     git push --follow-tags
