@@ -1,0 +1,10 @@
+config:
+  default: true
+  line-length: false
+
+globs:
+  - "**/*.{md,markdown}"
+
+ignores:
+  - "CHANGELOG.md"
+  - "releases/**"
