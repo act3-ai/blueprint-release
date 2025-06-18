@@ -17,6 +17,7 @@ inputs:
       options:
         - Go
         - Python
+        - Other
     # goreleaser supports both go and python, but python is in alpha
     - key: includeGoreleaser
       description: "Release with goreleaser (go only at this time)"
@@ -28,6 +29,7 @@ inputs:
     - key: executableName
       description: "Name of the Go executable"
       priority: 1
+      required: false
     - key: includeDockerPublish
       description: "Publish container image using Dockerfile"
       priority: 0
@@ -38,7 +40,7 @@ inputs:
     - key: helmChartDir
       description: "Version and publish helm chart"
       priority: 1
-      default: ""
+      required: false
 
 # List of conditions to exclude paths when rendering this Blueprint
 # Non-empty conditions result in the path being excluded

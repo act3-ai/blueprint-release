@@ -148,7 +148,13 @@ prepare() {
     old_version=v$(cat "$version_file")
 
     # linters and unit tests
+    {{if (eq .inputs.projectType "Other") -}}
+    # TODO: See https://daggerverse.dev/search?q=act3-ai for available lint modules
+
+    {{else -}}
     dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call {{lower .inputs.projectType}} check
+
+    {{end -}}
     # bump version, generate changelogs
     git fetch --tags
     dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call prepare export --path="."
@@ -157,8 +163,8 @@ prepare() {
     {{if (eq .inputs.projectType "Go") -}}
     # verify release version with gorelease
     dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call go verify --target-version="$version" --current-version="$old_version"
-    {{- end}}
 
+    {{end}}
     echo -e "Successfully ran prepare stage.\n"
     echo -e "Please review the local changes, especially releases/$version.md\n"
     if [ "$interactive" = "true" ] && [ "$(prompt_continue "approve")" = "true" ]; then
