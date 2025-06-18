@@ -199,7 +199,6 @@ publish() {
     version=v$(cat "$version_file")
 
     {{ $repoinfo := ( .meta.repository | trimPrefix "https://" | trimSuffix ".git" | splitn "/" 3 ) -}}
-
     {{/* Release with goreleaser, for GitHub or GitLab */}}
     {{- if (and (eq .inputs.includeGoreleaser "enabled") (eq .inputs.projectType "Go")) -}}
     {{- if (eq .inputs.host "github.com") -}}
@@ -207,11 +206,13 @@ publish() {
     with-secret-variable --name="GITHUB_API_TOKEN" --secret=env:GITHUB_API_TOKEN \
     with-env-variable --name="RELEASE_LATEST" --value="$RELEASE_LATEST" \
     release
-    {{- else -}}
+
+    {{else -}}
     dagger -m="$mod_goreleaser" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call \
     with-secret-variable --name="GITLAB_API_TOKEN" --secret=env:GITLAB_API_TOKEN \
     with-env-variable --name="RELEASE_LATEST" --value="$RELEASE_LATEST" \
     release
+
     {{- end -}}
     {{/* Basic releases with gh or glab CLIs */}}
     {{else if (eq .inputs.host "github.com") -}}
@@ -221,7 +222,8 @@ publish() {
     --version="$version" \
     --notes="releases/$version.md" \
     # --assets=file1,file2,...
-    {{else}}
+
+    {{else -}}
     dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call create-gitlab \
     --host="{{$repoinfo._0}}" \
     --project="{{$repoinfo._1}}/{{$repoinfo._2}}" \
@@ -229,32 +231,43 @@ publish() {
     --version="$version" \
     --notes="releases/$version.md" \
     # --assets=file1,file2,...
-    {{- end}}
 
-    {{- if (eq .inputs.projectType "Python") -}}
+    {{end -}}
+    {{if (eq .inputs.projectType "Python") -}}
     # publish python wheel
     # TODO: add OCI_REF, REG_USERNAME, and REG_PASSWORD
     dagger -m="$mod_python" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call python publish \
     --publish-url="<OCI_REF>" \
     --username="<REG_USERNAME>" \
     --password=env:<REG_PASSWORD>
-    {{- end}}
+
+    {{end -}}
     {{if (ne .inputs.helmChartDir "") -}}
     dagger -m="$mod_helm" -s="$silent" call \
     with-registry-auth --address="<REGISTRY>" --username="<REG_USERNAME>" --secret=en:<REG_PASSWORD> \
     chart --source={{.inputs.helmChartDir}} \
     package \
     publish --registry="oci://<REGISTRY>/<REPO>/charts"
-    {{- end}}
 
+    {{end -}}
+    # For resolving extra image tags, see https://daggerverse.dev/mod/github.com/act3-ai/dagger/release#Release.extraTags
+    # extra_tags=$(dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file"{{end}} call release extra-tags --ref=<OCI_REF> --version="$version")
+    # For applying extra image tags, see https://daggerverse.dev/mod/github.com/act3-ai/dagger/release#Release.addTags OR if the docker module is used, provide them directly to --tags
+    
+    {{if (eq .inputs.includeDockerPublish "enabled" ) -}}
+    dagger -m="$mod_docker" -s="$silent" --src="." call \
+    with-registry-creds --registry="<OCI_REG_REPO>" --username="<REG_USERNAME>" --password=env:<REG_PASSWORD> \
+    with-label --name="<LABEL_KEY>" --value="<LABEL_VALUE>" \
+    publish --address="<OCI_REG>" --tags="$version" --platforms="linux/amd64,linux/arm64"
+
+    {{else -}}
     # publish image
     # TODO:
     # - Docker dagger module - https://daggerverse.dev/mod/github.com/act3-ai/dagger/docker
     # - Native dagger containers - https://docs.dagger.io/cookbook#perform-a-multi-stage-build
     # - Or other methods
-    #
-    # For resolving extra image tags, see https://daggerverse.dev/mod/github.com/act3-ai/dagger/release#Release.extraTags
-    # extra_tags=$(dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file"{{end}} call release extra-tags --ref=<OCI_REF> --version="$version")
+
+    {{end -}}
 
     echo -e "Successfully ran publish stage.\n"
     echo "Release process complete."
