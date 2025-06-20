@@ -30,6 +30,7 @@ inputs:
       description: "Name of the Go executable"
       priority: 1
       required: false
+      default: ""
     - key: includeDockerPublish
       description: "Publish container image using Dockerfile"
       priority: 0
@@ -41,6 +42,7 @@ inputs:
       description: "Version and publish helm chart"
       priority: 1
       required: false
+      default: ""
 
 # List of conditions to exclude paths when rendering this Blueprint
 # Non-empty conditions result in the path being excluded
