@@ -7,7 +7,6 @@
 {{end}}
 
 # Custom Variables
-git_remote="{{.meta.repository}}"
 version_path="VERSION"
 changelog_path="CHANGELOG.md"
 notes_dir="releases"
@@ -129,7 +128,7 @@ fi
 # Inputs:
 #   - $1 : name of next stage to continue to.
 prompt_continue() {
-    read -p "Continue to $1 stage (y/n)?" choice
+    read -pr "Continue to $1 stage (y/n)?" choice
     case "$choice" in
     y|Y )
         echo -n "true"
@@ -146,11 +145,13 @@ prompt_continue() {
 
 # check_upstream ensures remote upstream matches local HEAD.
 check_upstream() {
-    git diff @{upstream} --stat --exit-code || {
-        echo "Local HEAD does not match upstream"
-        echo "Please review 'git diff @{upstream}' and match remote upstream or use --force"
-        exit 1
-    }
+    if [ "$force" = "false " ]; then
+        git diff "@{upstream}" --stat --exit-code || {
+            echo "Local HEAD does not match upstream"
+            echo "Please review 'git diff @{upstream}' and match remote upstream or use --force"
+            exit 1
+        }
+    fi
 }
 
 # prepare runs linters and unit tests, bumps the version, and generates the changelog.
@@ -172,6 +173,7 @@ prepare() {
     check_upstream
     # bump version, generate changelogs
     dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call prepare \
+    --ignore-error="$force" \
     --version-path="$version_path" \
     --changelog-path="$changelog_path" \
     # if custom notes path, run git-cliff module with bumped version to resolve filename
