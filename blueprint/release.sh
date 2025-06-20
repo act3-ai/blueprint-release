@@ -15,14 +15,14 @@ goprivate="{{.inputs.host}}"
 {{- end}}
 
 # Remote Dependencies
-mod_release="github.com/act3-ai/dagger/release"
+mod_release="github.com/act3-ai/dagger/release@release/v0.1.1"
 {{if (and (eq .inputs.includeGoreleaser "enabled") (eq .inputs.projectType "Go")) -}}
-mod_goreleaser="github.com/act3-ai/dagger/goreleaser"
+mod_goreleaser="github.com/act3-ai/dagger/goreleaser@goreleaser/v0.1.0"
 {{else if (eq .inputs.projectType "Python") -}}
-mod_python="github.com/act3-ai/dagger/python"
+mod_python="github.com/act3-ai/dagger/python@python/v0.1.0"
 {{- end -}}
 {{- if (eq .inputs.includeDockerPublish "enabled") -}}
-mod_docker="github.com/act3-ai/dagger/docker"
+mod_docker="github.com/act3-ai/dagger/docker@docker/v0.1.0"
 {{- end}}
 {{- if (ne .inputs.helmChartDir "") -}}
 mod_helm="github.com/sagikazarmark/daggerverse/helm@helm/v0.14.0"
