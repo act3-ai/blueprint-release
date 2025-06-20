@@ -8,7 +8,7 @@
 {{end -}}
 
 # Custom Variables
-git_remote="{{.inputs.repository}}"
+git_remote="{{.meta.repository}}"
 {{if (eq $private "true" ) -}}
 netrc_file="~/.netrc"
 goprivate="{{.inputs.host}}"
