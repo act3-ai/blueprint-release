@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
 # For custom changes, see https://daggerverse.dev/mod/github.com/act3-ai/dagger/release for dagger release module usage.
-
 {{- $private := "false" -}}
 {{- if (and (ne .inputs.host "github.com") (ne .inputs.host "gitlab.com")) -}}
 {{- $private = "true" -}}
-{{end -}}
+{{end}}
 
 # Custom Variables
 git_remote="{{.meta.repository}}"
