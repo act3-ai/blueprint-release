@@ -9,6 +9,9 @@
 
 # Custom Variables
 git_remote="{{.meta.repository}}"
+version_path="VERSION"
+changelog_path="CHANGELOG.md"
+notes_dir="releases"
 {{if (eq $private "true" ) -}}
 netrc_file="~/.netrc"
 goprivate="{{.inputs.host}}"
@@ -156,7 +159,7 @@ check_upstream() {
 prepare() {
     echo "Running prepare stage..."
 
-    old_version=v$(cat "$version_file")
+    old_version=v$(cat "$version_path")
 
     # linters and unit tests
     {{if (eq .inputs.projectType "Other") -}}
@@ -169,9 +172,14 @@ prepare() {
     git fetch --tags
     check_upstream
     # bump version, generate changelogs
-    dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call prepare export --path="."
+    dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call prepare \
+    --version-path="$version_path" \
+    --changelog-path="$changelog_path" \
+    # if custom notes path, run git-cliff module with bumped version to resolve filename
+    # --notes-path="${notes_dir}/${target_version}.md" \
+    export --path="."
 
-    version=v$(cat "$version_file")
+    version=v$(cat "$version_path")
     {{if (eq .inputs.projectType "Go") -}}
     # verify release version with gorelease
     dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call go verify --target-version="$version" --current-version="$old_version"
@@ -192,11 +200,11 @@ approve() {
     git fetch --tags
     check_upstream
 
-    version=v$(cat "$version_file")
-    notesPath="releases/$version.md"
+    version=v$(cat "$version_path")
+    notesPath="${notes_dir}/${version}.md"
 
     # stage release material
-    git add "VERSION" "CHANGELOG.md" "$notesPath"
+    git add "$version_path" "$changelog_path" "$notesPath"
     git add \*.md
     {{if (ne .inputs.helmChartDir "")}}git add {{.inputs.helmChartDir}}/*{{end}}
     # signed commit
@@ -220,7 +228,7 @@ publish() {
     # push this branch and the associated tags
     git push --follow-tags
 
-    version=v$(cat "$version_file")
+    version=v$(cat "$version_path")
 
     {{ $repoinfo := ( .meta.repository | trimPrefix "https://" | trimSuffix ".git" | splitn "/" 3 ) -}}
     {{/* Release with goreleaser, for GitHub or GitLab */}}
