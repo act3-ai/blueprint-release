@@ -7,7 +7,6 @@ version_path="VERSION"
 changelog_path="CHANGELOG.md"
 notes_dir="releases"
 
-
 # Remote Dependencies
 mod_release="github.com/act3-ai/dagger/release@release/v0.1.1"
 
@@ -42,7 +41,6 @@ Options:
         Skip git status checks, e.g. uncommitted changes. Only recommended for development.
 
 Required Environment Variables:
-    TODO: Add as desired
     - GITHUB_API_TOKEN     - repo:api access
 
 Dependencies:
@@ -140,9 +138,6 @@ prepare() {
 
     old_version=v$(cat "$version_path")
 
-    # linters and unit tests
-    # TODO: See https://daggerverse.dev/search?q=act3-ai for available lint modules
-
     git fetch --tags
     check_upstream
     # bump version, generate changelogs
@@ -150,8 +145,6 @@ prepare() {
     --ignore-error="$force" \
     --version-path="$version_path" \
     --changelog-path="$changelog_path" \
-    # if custom notes path, run git-cliff module with bumped version to resolve filename
-    # --notes-path="${notes_dir}/${target_version}.md" \
     export --path="."
 
     version=v$(cat "$version_path")
@@ -206,17 +199,6 @@ publish() {
     --token=env:GITHUB_API_TOKEN \
     --version="$version" \
     --notes="releases/$version.md" \
-    # --assets=file1,file2,...
-
-    # For resolving extra image tags, see https://daggerverse.dev/mod/github.com/act3-ai/dagger/release#Release.extraTags
-    # extra_tags=$(dagger -m="$mod_release" -s="$silent" --src="."  call release extra-tags --ref=<OCI_REF> --version="$version")
-    # For applying extra image tags, see https://daggerverse.dev/mod/github.com/act3-ai/dagger/release#Release.addTags OR if the docker module is used, provide them directly to --tags
-    
-    # publish image
-    # TODO:
-    # - Docker dagger module - https://daggerverse.dev/mod/github.com/act3-ai/dagger/docker
-    # - Native dagger containers - https://docs.dagger.io/cookbook#perform-a-multi-stage-build
-    # - Or other methods
 
     echo -e "Successfully ran publish stage.\n"
     echo "Release process complete."
