@@ -159,8 +159,9 @@ check_upstream() {
 prepare() {
     echo "Running prepare stage..."
 
+    {{if (eq .inputs.projectType "Go") -}}
     old_version=v$(cat "$version_path")
-
+    {{end}}
     # linters and unit tests
     {{if (eq .inputs.projectType "Other") -}}
     # TODO: See https://daggerverse.dev/search?q=act3-ai for available lint modules

@@ -136,8 +136,6 @@ check_upstream() {
 prepare() {
     echo "Running prepare stage..."
 
-    old_version=v$(cat "$version_path")
-
     git fetch --tags
     check_upstream
     # bump version, generate changelogs
