@@ -104,6 +104,8 @@ fi
 # prompt_continue requests user input until a valid y/n option is provided.
 # Inputs:
 #   - $1 : name of next stage to continue to.
+# disable read without -r backslash mangling for this func
+# shellcheck disable=SC2162
 prompt_continue() {
     read -pr "Continue to $1 stage (y/n)?" choice
     case "$choice" in
