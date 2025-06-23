@@ -107,7 +107,7 @@ fi
 # disable read without -r backslash mangling for this func
 # shellcheck disable=SC2162
 prompt_continue() {
-    read -pr "Continue to $1 stage (y/n)?" choice
+    read -p "Continue to $1 stage (y/n)?" choice
     case "$choice" in
     y|Y )
         echo -n "true"
