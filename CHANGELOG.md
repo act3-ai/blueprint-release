@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.5] - 2025-06-24
+
+### 💼 Other
+
+- Helm chart directory handling by @nathan-joslin
+
 ## [0.1.4] - 2025-06-24
 
 ### 💼 Other
