@@ -32,16 +32,16 @@ Options:
         Prints usage and other helpful information.
 
     -i, --interactive
-        Run the release process interactively, prompting for approval to continue for each stage: prepare, approve, and publish. By default it begins with the prepare stage, otherwise it "resumes" the process at a specified stage.
+        Run the release process interactively, prompting for approval to continue for each stage: prepare, approve, and publish. By default it begins with the prepare stage, otherwise it "resumes" the process at a specified stage. Alternatively, set \$INTERACTIVE.
 
     -s, --silent
-        Run dagger silently, e.g. 'dagger --silent'.
+        Run dagger silently, e.g. 'dagger --silent'. Alternatively, set \$SILENT.
 
     -f, --force
-        Skip git status checks, e.g. uncommitted changes. Only recommended for development.
+        Skip git status checks, e.g. uncommitted changes. Only recommended for development. Alternatively, set \$FORCE.
 
     --version VERSION
-        Run the release process for a specific semver version, ignoring git-cliff's configured bumping strategy.
+        Run the release process for a specific semver version, ignoring git-cliff's configured bumping strategy. Alternatively, set \$VERSION.
 
 Required Environment Variables:
     - GITHUB_API_TOKEN     - repo:api access
@@ -60,12 +60,12 @@ fi
 
 set -euo pipefail
 
-# Defaults
+# Defaults. Overriden by flag equivalents, when applicable.
 cmd=""
-force=false       # skip git status checks
-interactive=false # interactive mode
-silent=false      # silence dagger (dagger --silent)
-explicit_version=""  # release for a specific version
+force="${FORCE:-false}"       # skip git status checks
+interactive="${INTERACTIVE:-false}" # interactive mode
+silent="${SILENT:-false}"      # silence dagger (dagger --silent)
+explicit_version="${VERSION:-""}"  # release for a specific version
 
 # Get commands and flags
 while [[ $# -gt 0 ]]; do
