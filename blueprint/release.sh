@@ -308,7 +308,7 @@ publish() {
     {{end -}}
     {{if (ne .inputs.helmChartDir "") -}}
     dagger -m="$mod_helm" -s="$silent" call \
-    with-registry-auth --address="<REGISTRY>" --username="<REG_USERNAME>" --secret=en:<REG_PASSWORD> \
+    with-registry-auth --address="<REGISTRY>" --username="<REG_USERNAME>" --secret=env:<REG_PASSWORD> \
     chart --source="$chart_dir" \
     package \
     publish --registry="oci://<REGISTRY>/<REPO>/charts"
