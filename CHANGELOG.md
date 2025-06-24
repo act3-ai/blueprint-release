@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.4] - 2025-06-24
+
+### 💼 Other
+
+- Add env vars for flags
+
 ## [0.1.3] - 2025-06-24
 
 ### 💼 Other
