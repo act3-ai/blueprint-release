@@ -10,6 +10,7 @@
 version_path="VERSION"
 changelog_path="CHANGELOG.md"
 notes_dir="releases"
+{{if (ne .inputs.helmChartDir "")}}chart_dir="{{.inputs.helmChartDir}}"{{end}}
 
 # Remote Dependencies
 mod_release="github.com/act3-ai/dagger/release@release/v0.1.2"
@@ -205,6 +206,7 @@ prepare() {
     --version="$vVersion" \
     --version-path="$version_path" \
     --changelog-path="$changelog_path" \
+    {{if (ne .inputs.helmChartDir "")}}--chart-path="$chart_dir" \{{end}}
     # if custom notes path, run git-cliff module with bumped version to resolve filename
     # --notes-path="${notes_dir}/${target_version}.md" \
     export --path="."
@@ -236,7 +238,7 @@ approve() {
     # stage release material
     git add "$version_path" "$changelog_path" "$notesPath"
     git add \*.md
-    {{if (ne .inputs.helmChartDir "")}}git add {{.inputs.helmChartDir}}/*{{end}}
+    {{if (ne .inputs.helmChartDir "")}}git add "$chart_dir"{{end}}
     # signed commit
     git commit -S -m "chore(release): prepare for $vVersion"
     # annotated and signed tag
@@ -307,7 +309,7 @@ publish() {
     {{if (ne .inputs.helmChartDir "") -}}
     dagger -m="$mod_helm" -s="$silent" call \
     with-registry-auth --address="<REGISTRY>" --username="<REG_USERNAME>" --secret=en:<REG_PASSWORD> \
-    chart --source={{.inputs.helmChartDir}} \
+    chart --source="$chart_dir" \
     package \
     publish --registry="oci://<REGISTRY>/<REPO>/charts"
 
