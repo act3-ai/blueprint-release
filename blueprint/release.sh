@@ -70,6 +70,7 @@ Required Environment Variables:
     - GITLAB_API_TOKEN     - repo:api access
     {{- end}}
     {{if (and (eq .inputs.includeGoreleaser "enabled") (eq .inputs.projectType "Go")) -}}
+Optional Environment Variables:
     - RELEASE_LATEST       - tag release as latest
     {{- end}}
 
@@ -93,6 +94,9 @@ force=false       # skip git status checks
 interactive=false # interactive mode
 silent=false      # silence dagger (dagger --silent)
 explicit_version=""  # release for a specific version
+{{if (and (eq .inputs.includeGoreleaser "enabled") (eq .inputs.projectType "Go")) -}}
+release_latest="${RELEASE_LATEST:-false}" # tag release as latest
+{{- end}}
 
 # Get commands and flags
 while [[ $# -gt 0 ]]; do
@@ -261,13 +265,13 @@ publish() {
     {{- if (eq .inputs.host "github.com") -}}
     dagger -m="$mod_goreleaser" -s="$silent" --src="." call \
     with-secret-variable --name="GITHUB_API_TOKEN" --secret=env:GITHUB_API_TOKEN \
-    with-env-variable --name="RELEASE_LATEST" --value="$RELEASE_LATEST" \
+    with-env-variable --name="RELEASE_LATEST" --value="$release_latest" \
     release
 
     {{else -}}
     dagger -m="$mod_goreleaser" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call \
     with-secret-variable --name="GITLAB_API_TOKEN" --secret=env:GITLAB_API_TOKEN \
-    with-env-variable --name="RELEASE_LATEST" --value="$RELEASE_LATEST" \
+    with-env-variable --name="RELEASE_LATEST" --value="$release_latest" \
     release
 
     {{- end -}}
