@@ -21,7 +21,7 @@ mod_gitcliff="github.com/act3-ai/dagger/git-cliff@git-cliff/v0.1.1"
 {{if (and (eq .inputs.includeGoreleaser "enabled") (eq .inputs.projectType "Go")) -}}
 mod_goreleaser="github.com/act3-ai/dagger/goreleaser@goreleaser/v0.1.0"
 {{else if (eq .inputs.projectType "Python") -}}
-mod_python="github.com/act3-ai/dagger/python@python/v0.1.0"
+mod_python="github.com/act3-ai/dagger/python@python/v0.1.1"
 {{- end -}}
 {{- if (eq .inputs.includeDockerPublish "enabled") -}}
 mod_docker="github.com/act3-ai/dagger/docker@docker/v0.1.0"
