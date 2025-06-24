@@ -17,6 +17,7 @@ goprivate="{{.inputs.host}}"
 
 # Remote Dependencies
 mod_release="github.com/act3-ai/dagger/release@release/v0.1.1"
+mod_gitcliff="github.com/act3-ai/dagger/git-cliff@git-cliff/v0.1.1"
 {{if (and (eq .inputs.includeGoreleaser "enabled") (eq .inputs.projectType "Go")) -}}
 mod_goreleaser="github.com/act3-ai/dagger/goreleaser@goreleaser/v0.1.0"
 {{else if (eq .inputs.projectType "Python") -}}
@@ -36,7 +37,7 @@ Name:
     release.sh - Run a release process in stages.
 
 Usage:
-    release.sh COMMAND [-f | --force] [-i | --interactive] [-s | --silent] [-h | --help]
+    release.sh COMMAND [-f | --force] [-i | --interactive] [-s | --silent]  [--version VERSION] [-h | --help]
 
 Commands:
     prepare - prepare a release locally by running linters, tests, and producing the changelog, notes, assets, etc.
@@ -58,12 +59,18 @@ Options:
     -f, --force
         Skip git status checks, e.g. uncommitted changes. Only recommended for development.
 
+    --version VERSION
+        Run the release process for a specific semver version, ignoring git-cliff's configured bumping strategy.
+
 Required Environment Variables:
     TODO: Add as desired
     {{if (eq .inputs.host "github.com") -}}
     - GITHUB_API_TOKEN     - repo:api access
     {{- else -}}
     - GITLAB_API_TOKEN     - repo:api access
+    {{- end}}
+    {{if (and (eq .inputs.includeGoreleaser "enabled") (eq .inputs.projectType "Go")) -}}
+    - RELEASE_LATEST       - tag release as latest
     {{- end}}
 
 Dependencies:
@@ -85,35 +92,41 @@ cmd=""
 force=false       # skip git status checks
 interactive=false # interactive mode
 silent=false      # silence dagger (dagger --silent)
+explicit_version=""  # release for a specific version
 
 # Get commands and flags
 while [[ $# -gt 0 ]]; do
   case "$1" in
     # Commands
     "prepare" | "approve" | "publish")
-        cmd=$1
-        shift
-        ;;
+       cmd=$1
+       shift
+       ;;
     # Flags
     "-h" | "--help")
-      help
-      ;;
+       help
+       ;;
+    "--version")
+       shift
+       explicit_version=$1
+       shift
+       ;;
     "-i" | "--interactive")
-      interactive=true
-      shift
-      ;;
+       interactive=true
+       shift
+       ;;
     "-s" | "--silent")
-      silent=true
-      shift
-      ;;
+       silent=true
+       shift
+       ;;
     "-f" | "--force")
-      force=true
-      shift
-      ;;
+       force=true
+       shift
+       ;;
     *)
-      echo "Unknown option: $1"
-      help
-      ;;
+       echo "Unknown option: $1"
+       help
+       ;;
   esac
 done
 
@@ -171,23 +184,32 @@ prepare() {
     {{end -}}
     git fetch --tags
     check_upstream
+
     # bump version, generate changelogs
-    dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call prepare \
+    vVersion=""
+    if [ "$explicit_version" != "" ]; then
+        vVersion="$explicit_version"
+    else
+        vVersion=$(dagger -m="$mod_gitcliff" -s="$silent" --src="." call bumped-version)
+    fi
+
+    dagger -m="$mod_release" -s="$silent" --src="." call prepare \
     --ignore-error="$force" \
+    --version="$vVersion" \
     --version-path="$version_path" \
     --changelog-path="$changelog_path" \
     # if custom notes path, run git-cliff module with bumped version to resolve filename
     # --notes-path="${notes_dir}/${target_version}.md" \
     export --path="."
 
-    version=v$(cat "$version_path")
+    vVersion=v$(cat "$version_path") # use file as source of truth
     {{if (eq .inputs.projectType "Go") -}}
     # verify release version with gorelease
     dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call go verify --target-version="$version" --current-version="$old_version"
 
     {{end}}
     echo -e "Successfully ran prepare stage.\n"
-    echo -e "Please review the local changes, especially releases/$version.md\n"
+    echo -e "Please review the local changes, especially releases/$vVersion.md\n"
     if [ "$interactive" = "true" ] && [ "$(prompt_continue "approve")" = "true" ]; then
             approve
     fi
@@ -201,17 +223,17 @@ approve() {
     git fetch --tags
     check_upstream
 
-    version=v$(cat "$version_path")
-    notesPath="${notes_dir}/${version}.md"
+    vVersion=v$(cat "$version_path")
+    notesPath="${notes_dir}/${vVersion}.md"
 
     # stage release material
     git add "$version_path" "$changelog_path" "$notesPath"
     git add \*.md
     {{if (ne .inputs.helmChartDir "")}}git add {{.inputs.helmChartDir}}/*{{end}}
     # signed commit
-    git commit -S -m "chore(release): prepare for $version"
+    git commit -S -m "chore(release): prepare for $vVersion"
     # annotated and signed tag
-    git tag -s -a -m "Official release $version" "$version"
+    git tag -s -a -m "Official release $vVersion" "$vVersion"
 
     echo -e "Successfully ran approve stage.\n"
     if [ "$interactive" = "true" ] && [ "$(prompt_continue "publish")" = "true" ]; then
@@ -229,7 +251,7 @@ publish() {
     # push this branch and the associated tags
     git push --follow-tags
 
-    version=v$(cat "$version_path")
+    vVersion=v$(cat "$version_path")
 
     {{ $repoinfo := ( .meta.repository | trimPrefix "https://" | trimSuffix ".git" | splitn "/" 3 ) -}}
     {{/* Release with goreleaser, for GitHub or GitLab */}}
@@ -252,8 +274,8 @@ publish() {
     dagger -m="$mod_release" -s="$silent" --src="." call create-github \
     --repo="{{$repoinfo._1}}/{{$repoinfo._2}}" \
     --token=env:GITHUB_API_TOKEN \
-    --version="$version" \
-    --notes="releases/$version.md" \
+    --version="$vVersion" \
+    --notes="releases/$vVersion.md" \
     # --assets=file1,file2,...
 
     {{else -}}
@@ -261,8 +283,8 @@ publish() {
     --host="{{$repoinfo._0}}" \
     --project="{{$repoinfo._1}}/{{$repoinfo._2}}" \
     --token=env:GITLAB_API_TOKEN \
-    --version="$version" \
-    --notes="releases/$version.md" \
+    --version="$vVersion" \
+    --notes="releases/$vVersion.md" \
     # --assets=file1,file2,...
 
     {{end -}}
@@ -291,7 +313,7 @@ publish() {
     dagger -m="$mod_docker" -s="$silent" --src="." call \
     with-registry-creds --registry="<OCI_REG_REPO>" --username="<REG_USERNAME>" --password=env:<REG_PASSWORD> \
     with-label --name="<LABEL_KEY>" --value="<LABEL_VALUE>" \
-    publish --address="<OCI_REG>" --tags="$version" --platforms="linux/amd64,linux/arm64"
+    publish --address="<OCI_REG>" --tags="$vVersion" --platforms="linux/amd64,linux/arm64"
 
     {{else -}}
     # publish image

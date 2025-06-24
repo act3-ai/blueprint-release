@@ -9,7 +9,7 @@ notes_dir="releases"
 
 # Remote Dependencies
 mod_release="github.com/act3-ai/dagger/release@release/v0.1.1"
-
+mod_gitcliff="github.com/act3-ai/dagger/git-cliff@git-cliff/v0.1.1"
 
 help() {
     cat <<EOF
@@ -18,7 +18,7 @@ Name:
     release.sh - Run a release process in stages.
 
 Usage:
-    release.sh COMMAND [-f | --force] [-i | --interactive] [-s | --silent] [-h | --help]
+    release.sh COMMAND [-f | --force] [-i | --interactive] [-s | --silent] [--version VERSION] [-h | --help]
 
 Commands:
     prepare - prepare a release locally by running linters, tests, and producing the changelog, notes, assets, etc.
@@ -39,6 +39,9 @@ Options:
 
     -f, --force
         Skip git status checks, e.g. uncommitted changes. Only recommended for development.
+
+    --version VERSION
+        Run the release process for a specific semver version, ignoring git-cliff's configured bumping strategy.
 
 Required Environment Variables:
     - GITHUB_API_TOKEN     - repo:api access
@@ -62,35 +65,41 @@ cmd=""
 force=false       # skip git status checks
 interactive=false # interactive mode
 silent=false      # silence dagger (dagger --silent)
+explicit_version=""  # release for a specific version
 
 # Get commands and flags
 while [[ $# -gt 0 ]]; do
   case "$1" in
     # Commands
     "prepare" | "approve" | "publish")
-        cmd=$1
-        shift
-        ;;
+       cmd=$1
+       shift
+       ;;
     # Flags
     "-h" | "--help")
-      help
-      ;;
+       help
+       ;;
+    "--version")
+       shift
+       explicit_version=$1
+       shift
+       ;;
     "-i" | "--interactive")
-      interactive=true
-      shift
-      ;;
+       interactive=true
+       shift
+       ;;
     "-s" | "--silent")
-      silent=true
-      shift
-      ;;
+       silent=true
+       shift
+       ;;
     "-f" | "--force")
-      force=true
-      shift
-      ;;
+       force=true
+       shift
+       ;;
     *)
-      echo "Unknown option: $1"
-      help
-      ;;
+       echo "Unknown option: $1"
+       help
+       ;;
   esac
 done
 
@@ -137,17 +146,26 @@ prepare() {
 
     git fetch --tags
     check_upstream
+
     # bump version, generate changelogs
+    vVersion=""
+    if [ "$explicit_version" != "" ]; then
+        vVersion="$explicit_version"
+    else
+        vVersion=$(dagger -m="$mod_gitcliff" -s="$silent" --src="." call bumped-version)
+    fi
+
     dagger -m="$mod_release" -s="$silent" --src="." call prepare \
     --ignore-error="$force" \
+    --version="$vVersion" \
     --version-path="$version_path" \
     --changelog-path="$changelog_path" \
     export --path="."
 
-    version=v$(cat "$version_path")
+    vVersion=v$(cat "$version_path") # use file as source of truth
     
     echo -e "Successfully ran prepare stage.\n"
-    echo -e "Please review the local changes, especially releases/$version.md\n"
+    echo -e "Please review the local changes, especially releases/$vVersion.md\n"
     if [ "$interactive" = "true" ] && [ "$(prompt_continue "approve")" = "true" ]; then
             approve
     fi
@@ -161,17 +179,17 @@ approve() {
     git fetch --tags
     check_upstream
 
-    version=v$(cat "$version_path")
-    notesPath="${notes_dir}/${version}.md"
+    vVersion=v$(cat "$version_path")
+    notesPath="${notes_dir}/${vVersion}.md"
 
     # stage release material
     git add "$version_path" "$changelog_path" "$notesPath"
     git add \*.md
     
     # signed commit
-    git commit -S -m "chore(release): prepare for $version"
+    git commit -S -m "chore(release): prepare for $vVersion"
     # annotated and signed tag
-    git tag -s -a -m "Official release $version" "$version"
+    git tag -s -a -m "Official release $vVersion" "$vVersion"
 
     echo -e "Successfully ran approve stage.\n"
     if [ "$interactive" = "true" ] && [ "$(prompt_continue "publish")" = "true" ]; then
@@ -189,13 +207,13 @@ publish() {
     # push this branch and the associated tags
     git push --follow-tags
 
-    version=v$(cat "$version_path")
+    vVersion=v$(cat "$version_path")
 
     dagger -m="$mod_release" -s="$silent" --src="." call create-github \
     --repo="act3-ai/blueprint-release" \
     --token=env:GITHUB_API_TOKEN \
-    --version="$version" \
-    --notes="releases/$version.md" \
+    --version="$vVersion" \
+    --notes="releases/$vVersion.md"
 
     echo -e "Successfully ran publish stage.\n"
     echo "Release process complete."
