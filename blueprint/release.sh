@@ -19,7 +19,7 @@ goprivate="{{.inputs.host}}"
 mod_release="github.com/act3-ai/dagger/release@release/v0.1.2"
 mod_gitcliff="github.com/act3-ai/dagger/git-cliff@git-cliff/v0.1.1"
 {{if (and (eq .inputs.includeGoreleaser "enabled") (eq .inputs.projectType "Go")) -}}
-mod_goreleaser="github.com/act3-ai/dagger/goreleaser@goreleaser/v0.1.0"
+mod_goreleaser="github.com/act3-ai/dagger/goreleaser@goreleaser/v0.1.1"
 {{else if (eq .inputs.projectType "Python") -}}
 mod_python="github.com/act3-ai/dagger/python@python/v0.1.1"
 {{- end -}}
