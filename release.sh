@@ -131,11 +131,13 @@ prompt_continue() {
     esac
 }
 
-# check_upstream ensures remote upstream matches local HEAD.
+# check_upstream ensures remote upstream matches local commit.
+# Inputs:
+#  - $1 : commit, often HEAD or HEAD~1
 check_upstream() {
     if [ "$force" != "true" ]; then
-        echo "Comparing local HEAD to remote upstream"
-        git diff "@{upstream}" HEAD --stat --exit-code
+        echo "Comparing local $1 to remote upstream"
+        git diff "@{upstream}" $1 --stat --exit-code
     fi
 }
 
@@ -145,7 +147,7 @@ prepare() {
     echo "Running prepare stage..."
 
     git fetch --tags
-    check_upstream
+    check_upstream "HEAD"
 
     # bump version, generate changelogs
     vVersion=""
@@ -177,7 +179,7 @@ approve() {
     echo "Running approve stage..."
 
     git fetch --tags
-    check_upstream
+    check_upstream "HEAD"
 
     vVersion=v$(cat "$version_path")
     notesPath="${notes_dir}/${vVersion}.md"
@@ -202,7 +204,7 @@ publish() {
     echo "Running publish stage..."
 
     git fetch --tags
-    check_upstream
+    check_upstream "HEAD~1"  # compare before our release commit, i.e. we're only fast forwarding that commit
 
     # push this branch and the associated tags
     git push --follow-tags
