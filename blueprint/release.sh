@@ -188,7 +188,7 @@ prepare() {
 
     {{else -}}
     if [ "$force" != "true" ]; then
-        dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call \
+        dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc=file:"$netrc_file" {{end}}call \
             {{lower .inputs.projectType}} {{if (and (eq .inputs.projectType "Go") (eq $private "true"))}}--go-private="$goprivate" {{end}}check
     fi
     {{end -}}
@@ -217,7 +217,7 @@ prepare() {
     {{if (eq .inputs.projectType "Go") -}}
     # verify release version with gorelease
     if [ "$force" != "true" ]; then
-        dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call \
+        dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc=file:"$netrc_file" {{end}}call \
             go {{if (eq $private "true")}}--go-private="$goprivate" {{end}}verify --target-version="$vVersion" --current-version="$old_version"
     fi
 
@@ -277,7 +277,7 @@ publish() {
     release
 
     {{else -}}
-    dagger -m="$mod_goreleaser" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call \
+    dagger -m="$mod_goreleaser" -s="$silent" --src="." {{if (eq $private "true")}}--netrc=file:"$netrc_file" {{end}}call \
     with-secret-variable --name="GITLAB_API_TOKEN" --secret=env:GITLAB_API_TOKEN \
     with-env-variable --name="RELEASE_LATEST" --value="$release_latest" \
     release
@@ -293,7 +293,7 @@ publish() {
     # --assets=file1,file2,...
 
     {{else -}}
-    dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call create-gitlab \
+    dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc=file:"$netrc_file" {{end}}call create-gitlab \
     --host="{{$repoinfo._0}}" \
     --project="{{$repoinfo._1}}/{{$repoinfo._2}}" \
     --token=env:GITLAB_API_TOKEN \
@@ -305,7 +305,7 @@ publish() {
     {{if (eq .inputs.projectType "Python") -}}
     # publish python wheel
     # TODO: add OCI_REF, REG_USERNAME, and REG_PASSWORD
-    dagger -m="$mod_python" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call python publish \
+    dagger -m="$mod_python" -s="$silent" --src="." {{if (eq $private "true")}}--netrc=file:"$netrc_file" {{end}}call python publish \
     --publish-url="<OCI_REF>" \
     --username="<REG_USERNAME>" \
     --password=env:<REG_PASSWORD>
@@ -320,7 +320,7 @@ publish() {
 
     {{end -}}
     # For resolving extra image tags, see https://daggerverse.dev/mod/github.com/act3-ai/dagger/release#Release.extraTags
-    # extra_tags=$(dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file"{{end}} call release extra-tags --ref=<OCI_REF> --version="$version")
+    # extra_tags=$(dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc=file:"$netrc_file"{{end}} call release extra-tags --ref=<OCI_REF> --version="$version")
     # For applying extra image tags, see https://daggerverse.dev/mod/github.com/act3-ai/dagger/release#Release.addTags OR if the docker module is used, provide them directly to --tags
     
     {{if (eq .inputs.includeDockerPublish "enabled" ) -}}
