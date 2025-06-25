@@ -13,15 +13,15 @@ notes_dir="releases"
 {{if (ne .inputs.helmChartDir "")}}chart_dir="{{.inputs.helmChartDir}}"{{end}}
 
 # Remote Dependencies
-mod_release="github.com/act3-ai/dagger/release@release/v0.1.2"
-mod_gitcliff="github.com/act3-ai/dagger/git-cliff@git-cliff/v0.1.1"
+mod_release="github.com/act3-ai/dagger/release@release/v0.1.3"
+mod_gitcliff="github.com/act3-ai/dagger/git-cliff@git-cliff/v0.1.2"
 {{if (and (eq .inputs.includeGoreleaser "enabled") (eq .inputs.projectType "Go")) -}}
-mod_goreleaser="github.com/act3-ai/dagger/goreleaser@goreleaser/v0.1.1"
+mod_goreleaser="github.com/act3-ai/dagger/goreleaser@goreleaser/v0.1.2"
 {{else if (eq .inputs.projectType "Python") -}}
-mod_python="github.com/act3-ai/dagger/python@python/v0.1.1"
+mod_python="github.com/act3-ai/dagger/python@python/v0.1.2"
 {{- end -}}
 {{- if (eq .inputs.includeDockerPublish "enabled") -}}
-mod_docker="github.com/act3-ai/dagger/docker@docker/v0.1.0"
+mod_docker="github.com/act3-ai/dagger/docker@docker/v0.1.1"
 {{- end}}
 {{- if (ne .inputs.helmChartDir "") -}}
 mod_helm="github.com/sagikazarmark/daggerverse/helm@helm/v0.14.0"
