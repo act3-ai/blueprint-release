@@ -54,7 +54,7 @@ Options:
         Run dagger silently, e.g. 'dagger --silent'. Alternatively, set \$SILENT.
 
     -f, --force
-        Skip git status checks, e.g. uncommitted changes. Only recommended for development. Alternatively, set \$FORCE.
+       Skip git status checks, e.g. uncommitted changes, in all stages and linters in prepare. Alternatively, set \$FORCE.
 
     --version VERSION
         Run the release process for a specific semver version, ignoring git-cliff's configured bumping strategy. Alternatively, set \$VERSION.
@@ -187,9 +187,10 @@ prepare() {
     # TODO: See https://daggerverse.dev/search?q=act3-ai for available lint modules
 
     {{else -}}
-    dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call \
-    {{lower .inputs.projectType}} {{if (and (eq .inputs.projectType "Go") (eq $private "true"))}}--go-private="$goprivate" {{end}}check
-
+    if [ "$force" != "true" ]; then
+        dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call \
+            {{lower .inputs.projectType}} {{if (and (eq .inputs.projectType "Go") (eq $private "true"))}}--go-private="$goprivate" {{end}}check
+    fi
     {{end -}}
     git fetch --tags
     check_upstream "HEAD"
@@ -215,8 +216,10 @@ prepare() {
     vVersion=v$(cat "$version_path") # use file as source of truth
     {{if (eq .inputs.projectType "Go") -}}
     # verify release version with gorelease
-    dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call \
-    go {{if (eq $private "true")}}--go-private="$goprivate" {{end}}verify --target-version="$vVersion" --current-version="$old_version"
+    if [ "$force" != "true" ]; then
+        dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call \
+            go {{if (eq $private "true")}}--go-private="$goprivate" {{end}}verify --target-version="$vVersion" --current-version="$old_version"
+    fi
 
     {{end}}
     echo -e "Successfully ran prepare stage.\n"
