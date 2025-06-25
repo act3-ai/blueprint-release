@@ -187,7 +187,8 @@ prepare() {
     # TODO: See https://daggerverse.dev/search?q=act3-ai for available lint modules
 
     {{else -}}
-    dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call {{lower .inputs.projectType}} check
+    dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call \
+    {{lower .inputs.projectType}} {{if (and (eq .inputs.projectType "Go") (eq $private "true"))}}--go-private="$goprivate" {{end}}check
 
     {{end -}}
     git fetch --tags
@@ -214,7 +215,8 @@ prepare() {
     vVersion=v$(cat "$version_path") # use file as source of truth
     {{if (eq .inputs.projectType "Go") -}}
     # verify release version with gorelease
-    dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call go verify --target-version="$version" --current-version="$old_version"
+    dagger -m="$mod_release" -s="$silent" --src="." {{if (eq $private "true")}}--netrc="$netrc_file" {{end}}call \
+    go {{if (eq $private "true")}}--go-private="$goprivate" {{end}}verify --target-version="$vVersion" --current-version="$old_version"
 
     {{end}}
     echo -e "Successfully ran prepare stage.\n"
