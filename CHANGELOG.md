@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.6] - 2025-06-25
+
+### 💼 Other
+
+- Typo setting registry env var for helm publishing by @nathan-joslin
+- Add plumbing for goprivate for go checks by @nathan-joslin
+- Force skips linters in prepare by @nathan-joslin
+
+### 📦 Dependencies
+
+- Bump act3-ai dagger modules to latest versions by @nathan-joslin
+
 ## [0.1.5] - 2025-06-24
 
 ### 💼 Other
