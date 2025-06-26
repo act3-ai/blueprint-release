@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.7] - 2025-06-26
+
+### 🐛 Bug Fixes (release.sh)
+
+- *(release.sh)* Use file: prefix for netrc options as it's a dagger secret
+
 ## [0.1.6] - 2025-06-25
 
 ### 💼 Other
